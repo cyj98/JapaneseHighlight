@@ -13,8 +13,6 @@
 
 If you are look for English version, check for [English highlighter](https://github.com/cyj98/word-discoverer/releases)
 
-The src/data/mecab.data is so big that it cannot upload to this repo, you can compile yourself acoording to [mecab](https://github.com/Birch-san/mecab/tree/master/mecab-web) and scripts/mecab_emscripten.sh
-
 Main purpose of this project is to improve reading experience for non-native speakers.
 
 According to some observations reading behavior of native and non-native speakers can differ.

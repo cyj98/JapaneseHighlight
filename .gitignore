@@ -14,6 +14,4 @@ package-lock.json
 
 *.log
 
-src/data/mecab.data
-
 config
