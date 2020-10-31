@@ -1,0 +1,19 @@
+# dependencies
+**/node_modules
+
+# production
+/dist-chrome
+
+# misc
+.DS_Store
+
+yarn.lock
+package-lock.json
+*bak
+.vscode
+
+*.log
+
+src/data/mecab.data
+
+config

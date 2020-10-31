@@ -1,0 +1,36 @@
+{
+  "name": "japanesehighlight",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "start": "webpack --watch",
+    "build": "webpack --mode=production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "cyj98",
+  "devDependencies": {
+    "copy-webpack-plugin": "^5.1.1",
+    "css-loader": "^5.0.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-no-unsanitized": "^3.1.2",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "2.0.5",
+    "terser-webpack-plugin": "^2.3.6",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-extension-reloader": "^1.1.4"
+  },
+  "dependencies": {
+    "file-saver": "^2.0.2",
+    "p-queue": "^6.6.2",
+    "webextension-polyfill": "^0.6.0"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "all"
+  }
+}

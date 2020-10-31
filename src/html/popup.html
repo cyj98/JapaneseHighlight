@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        background-color: rgb(255, 248, 220);
+        min-width: 320px;
+        max-width: 320px;
+      }
+      fieldset {
+        background-color: orange;
+        padding: 8px;
+        border: 0;
+      }
+      .rate-button {
+        width: 60px;
+        background-color: #4caf50; /* Green */
+        border: 1px solid white;
+        color: white;
+        padding: 4px 6px;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+      }
+      .rate-button:hover {
+        background-color: #3e8e41;
+      }
+      .help-button {
+        width: 40px;
+        background-color: #4caf50; /* Green */
+        border: 1px solid white;
+        color: white;
+        padding: 4px 2px;
+        text-decoration: none;
+        display: block;
+        font-size: 12px;
+        margin: 4px 2px;
+        font-weight: bold;
+        transition-duration: 0.4s;
+        cursor: pointer;
+        float: right;
+      }
+      .help-button :hover {
+        background-color: #3e8e41;
+      }
+      .vocab-button {
+        width: 150px;
+        background-color: #4caf50; /* Green */
+        border: 1px solid white;
+        color: white;
+        padding: 4px 6px;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+      }
+      .vocab-button:hover {
+        background-color: #3e8e41;
+      }
+      .add-button {
+        background-color: orange;
+        border: none;
+        padding: 0px 0px 0px 0px;
+        margin: 0px 4px 0px 10px;
+        cursor: pointer;
+      }
+      .indicator {
+        color: green;
+        font-weight: bold;
+      }
+      /* #rateIndicator2 { */
+      /* #rankInfo {
+        width: 40px;
+        font-size: 16px;
+        color: green;
+        font-weight: bold;
+        text-align: center;
+      } */
+      .rate-info {
+        font-size: 14px;
+        margin: 4px 2px;
+      }
+      input[type='text'] {
+        font-size: 14px;
+        box-sizing: border-box;
+        height: 25px;
+        width: 150px;
+        margin: 4px 2px;
+      }
+      /* .rangeLabel {
+        background-color: purple;
+        display: inline-block;
+        width: 80px;
+        padding: 2px;
+        text-align: center;
+        vertical-align: middle;
+        color: white;
+      }
+      .middleCentered {
+        height: 50px;
+        vertical-align: middle;
+        display: table-cell;
+      }
+      .warningLabel {
+        color: red;
+        padding: 2px;
+        text-align: center;
+        font-weight: bold;
+      } */
+      .cb-label {
+        vertical-align: middle;
+        padding: 2px;
+        font-size: 14px;
+      }
+      .checkbox {
+        width: 14px;
+        height: 14px;
+        vertical-align: middle;
+      }
+
+      .page-centered {
+        width: 200px;
+        position: fixed;
+        left: 50%;
+        margin-left: -100px;
+        background-color: purple;
+        color: white;
+        padding: 2px;
+        text-align: center;
+        vertical-align: middle;
+      }
+    </style>
+    <title>Words Discoverer</title>
+    <!-- <script src="../common_lib.js"></script> -->
+    <script src="../scripts/popup.js"></script>
+  </head>
+  <body>
+    <fieldset>
+      <span class="rate-info" id="mode-header"></span>
+      <br />
+      <br />
+      <input type="checkbox" class="checkbox" id="add-to-list" />
+      <span class="cb-label">
+        <span>__MSG_addVerb__ "</span><span id="add-host-name"></span><span>" __MSG_toVerb__ </span
+        ><a href="example.com" target="_blank" id="add-to-list-label"></a>
+      </span>
+      <br />
+      <button class="vocab-button" id="change-mode">
+        __MSG_switchModeLabel__
+      </button>
+    </fieldset>
+    <br />
+    <fieldset>
+      <div class="rate-info">
+        __MSG_rateInfo1__
+        <span class="indicator" id="count-indicator">n/a</span>
+        <!-- (<span class="indicator" id="rateIndicator1">n/a</span>)  -->
+        <!-- __MSG_rateInfo2__ -->
+      </div>
+      <button class="rate-button" id="rank-m1000">-1000</button>
+      <button class="rate-button" id="rank-m100">-100</button>
+      <!-- <div class="rankInfo"> -->
+      <!-- __MSG_rateInfo1__ -->
+      <!-- <span class="indicator" id="count-indicator">n/a</span> -->
+      <!-- (<span class="indicator" id="rateIndicator1">n/a</span>)  -->
+      <!-- __MSG_rateInfo2__ -->
+      <!-- </div> -->
+      <!-- <div style="display: inline-block" id="rateIndicator2">n/a</div> -->
+      <button class="rate-button" id="rank-p100">+100</button>
+      <button class="rate-button" id="rank-p1000">+1000</button>
+    </fieldset>
+    <br />
+    <fieldset>
+      <div class="rate-info">
+        __MSG_vocabSizeInfo1__
+        <span class="indicator" id="vocab-indicator">n/a</span>
+        __MSG_vocabSizeInfo2__
+      </div>
+      <button class="vocab-button" id="show-vocab">
+        __MSG_showVocab__
+      </button>
+      <br />
+      <br />
+      <span class="rate-info">__MSG_tipInfo__</span>
+      <br />
+      <input type="text" id="add-text" /><button class="add-button" id="add-word">
+        <img src="../images/add.png" />
+      </button>
+      <br />
+      <span class="rate-info" id="add-op-result"></span>
+    </fieldset>
+    <br />
+    <fieldset>
+      <button class="vocab-button" id="adjust">__MSG_adjust__</button>
+      <button class="help-button" id="get-help">?</button>
+    </fieldset>
+  </body>
+</html>

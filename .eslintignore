@@ -1,0 +1,8 @@
+# dependencies
+**/node_modules
+
+# production
+/dist-chrome
+
+src/scripts/lib/mecab.js
+src/scripts/lib/FileSaver.js
