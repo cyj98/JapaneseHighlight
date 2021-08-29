@@ -7,7 +7,7 @@ import contentScriptStyle from '../styles/content_script.css';
 const queue = new PQueue({ concurrency: 20 });
 
 const classNamePrefix = 'wdautohlja';
-const JapaneseRegex = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf\u3400-\u4dbf]/;
+const JapaneseRegex = /[ぁ-んァ-ン一-龠]/;
 let dictWords;
 
 let userVocabulary = [];
@@ -16,8 +16,6 @@ let highlightSettings = null;
 let hoverSettings = null;
 let onlineDicts = null;
 let ttsEnabled = null;
-
-// let disableByKeypress = false;
 
 let currentLexeme = '';
 // use to find node to render popup
@@ -57,6 +55,10 @@ const goodTagsList = [
   'Q',
   'DIV',
   'SPAN',
+  'TABLE',
+  'TBODY',
+  'TR',
+  'TD',
 ];
 
 const goodNodeFilter = (node) => {
@@ -75,6 +77,8 @@ const textToHlNodes = async (textNode) => {
 
   let newTextNode = textNode;
   let lastEndPos = 0;
+  let specialFlag = false;
+  let oldIndex;
   // length - 2 because last 2 lines always are "EOS" ""
   for (let i = 0; i < lines.length - 2; i += 1) {
     let className;
@@ -82,10 +86,7 @@ const textToHlNodes = async (textNode) => {
     const textArr = lines[i].split('\t');
     const originalWord = textArr[0];
     if (originalWord.match(JapaneseRegex)) {
-      let lemma = textArr[3];
-      if (lemma.includes('-')) {
-        [, , lemma] = textArr;
-      }
+      const lemma = textArr[3];
       let match;
       if (
         highlightSettings.wordParams.enabled &&
@@ -95,7 +96,7 @@ const textToHlNodes = async (textNode) => {
         if (wordFound && wordFound.rank >= minimunRank) {
           match = originalWord;
           textStyle = makeHlStyle(highlightSettings.wordParams);
-          className = `${lemma}_${wordFound.rank}:${wordFound.frequency}`;
+          className = `${lemma}_${originalWord}_${wordFound.rank}:${wordFound.frequency}`;
         }
       }
       if (tokenizeOther && !match) {
@@ -113,11 +114,20 @@ const textToHlNodes = async (textNode) => {
         currentNodeId += 1;
         newTextNode = newTextNode.splitText(wordBeginIndex - lastEndPos);
         lastEndPos = wordBeginIndex + match.length;
-        newTextNode.deleteData(0, match.length);
-        parentElement.insertBefore(span, newTextNode);
+        if (newTextNode.textContent) {
+          newTextNode.deleteData(0, match.length);
+          parentElement.insertBefore(span, newTextNode);
+        }
       }
       wordBeginIndex += originalWord.length;
-    } else {
+    } else if (originalWord.includes('�')) {
+      // mecab sometimes will show two consecutive lines includes � instead of 1 normal line
+      if (specialFlag && wordBeginIndex === oldIndex) {
+        wordBeginIndex += 1;
+      }
+      oldIndex = wordBeginIndex;
+      specialFlag = !specialFlag;
+    } else if (originalWord !== 'EOS') {
       wordBeginIndex += originalWord.length;
     }
   }
@@ -127,33 +137,22 @@ const doHighlightText = (textNode) => {
   if (textNode.nodeType !== Node.TEXT_NODE || dictWords === null || minimunRank === null) return;
   const { parentElement, textContent } = textNode;
   if (!parentElement) return;
-  if (textContent.length <= 3) return;
-  // pathetic hack to skip json data in text (e.g. google images use it).
-  if (textContent.indexOf('{') !== -1 && textContent.indexOf('}') !== -1) return;
+  if (!textContent) return;
   if (!textContent.match(JapaneseRegex)) return;
   textToHlNodes(textNode);
 };
 
 const textNodesUnder = (node) => {
-  if (
-    !node.parentElement ||
-    (typeof node.parentElement.className === 'string' &&
-      node.parentElement.className.includes(classNamePrefix))
-  )
-    return;
-  if (node.nodeType === Node.ELEMENT_NODE) {
-    if (node.id && node.id.startsWith(classNamePrefix)) return;
-    const nodeList = [];
-    const treeWalker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, goodNodeFilter, false);
-    let currentNode = treeWalker.nextNode();
-    while (currentNode) {
-      nodeList.push(currentNode);
-      currentNode = treeWalker.nextNode();
-    }
-    nodeList.forEach((textNode) => doHighlightText(textNode));
-  } else if (node.nodeType === Node.TEXT_NODE) {
-    doHighlightText(node);
+  if (!node.nodeType === Node.ELEMENT_NODE && !node.nodeType === Node.TEXT_NODE) return;
+  if (node.id && node.id.startsWith(classNamePrefix)) return;
+  const nodeList = [];
+  const treeWalker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, goodNodeFilter, false);
+  let currentNode = treeWalker.nextNode();
+  while (currentNode) {
+    nodeList.push(currentNode);
+    currentNode = treeWalker.nextNode();
   }
+  nodeList.forEach((textNode) => doHighlightText(textNode));
 };
 
 const unhighlight = (lemma) => {
@@ -220,7 +219,9 @@ const createBubble = () => {
   addButton.textContent = browser.i18n.getMessage('menuItem');
   addButton.style.marginBottom = '4px';
   addButton.addEventListener('click', () => {
-    addLexeme(currentLexeme, bubbleHandleAddResult);
+    addLexeme(currentLexeme, bubbleHandleAddResult).then((result) => {
+      if (result === true) userVocabulary[currentLexeme] = 1;
+    });
   });
   bubbleDOM.appendChild(addButton);
 
@@ -233,7 +234,6 @@ const createBubble = () => {
   });
   bubbleDOM.appendChild(speakButton);
 
-  // dictPairs = makeDictionaryPairs();
   const dictPairs = onlineDicts;
   for (let i = 0; i < dictPairs.length; i += 1) {
     const dictButton = document.createElement('button');
@@ -252,7 +252,6 @@ const createBubble = () => {
     bubbleDOM.wdMouseOn = true;
   });
 
-  // return bubbleDOM;
   return bubbleDOMContainer;
 };
 
@@ -275,7 +274,7 @@ const renderBubble = () => {
   const bubbleDOM = shadow.getElementById('wd-selection-bubble');
   const bubbleText = shadow.getElementById('wd-selection-bubble-text');
   const bubbleFreq = shadow.getElementById('wd-selection-bubble-freq');
-  const [, lexeme, rankAndCount] = className.split('_');
+  const [, lexeme, , rankAndCount] = className.split('_');
   currentLexeme = formatOriginalWord(lexeme);
   bubbleText.textContent = currentLexeme;
   if (rankAndCount) {
@@ -313,7 +312,7 @@ const processMouse = (e) => {
     return;
   }
   const { className } = hitNode;
-  if (!className || typeof className !== 'string' || !className.startsWith(classNamePrefix)) {
+  if (!className || typeof className !== 'string' || !className.startsWith(`${classNamePrefix}_`)) {
     processHlLeave();
     return;
   }
@@ -365,7 +364,6 @@ const initForPage = async () => {
   } = result);
 
   textNodesUnder(document.body);
-  // document.addEventListener('DOMNodeInserted', onNodeInserted, false);
   const observer = new MutationObserver((mutationsList) => {
     mutationsList.forEach((mutation) => {
       Array.from(mutation.addedNodes).forEach((node) => {
@@ -388,16 +386,7 @@ const initForPage = async () => {
     if (event.key === 'Control') {
       functionKeyIsPressed = true;
       renderBubble();
-      // return;
     }
-    // var elementTagName = event.target.tagName;
-    // if (!disable_by_keypress && elementTagName != 'BODY') {
-    //   // workaround to prevent highlighting in facebook messages
-    //   // this logic can also be helpful in other situations,
-    //   // it's better play safe and stop highlighting when user enters data.
-    //   disable_by_keypress = true;
-    //   chrome.runtime.sendMessage({ wdmVerdict: 'keyboard' });
-    // }
   });
   document.addEventListener('keyup', (event) => {
     if (event.key === 'Control') {
