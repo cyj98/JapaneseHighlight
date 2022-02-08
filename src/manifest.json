@@ -29,6 +29,6 @@
     "scopes": ["https://www.googleapis.com/auth/drive.file"]
   },
   "permissions": ["contextMenus", "storage", "activeTab", "tts", "identity", "unlimitedStorage"],
-  "version": "0.1.2",
+  "version": "1.0.1",
   "web_accessible_resources": ["data/mecab.data", "data/mecab.wasm"]
 }

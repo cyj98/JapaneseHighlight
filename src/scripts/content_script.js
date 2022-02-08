@@ -96,7 +96,7 @@ const textToHlNodes = async (textNode) => {
         if (wordFound && wordFound.rank >= minimunRank) {
           match = originalWord;
           textStyle = makeHlStyle(highlightSettings.wordParams);
-          className = `${lemma}_${originalWord}_${wordFound.rank}:${wordFound.frequency}`;
+          className = `${lemma}_${originalWord}_${wordFound.rank}`;
         }
       }
       if (tokenizeOther && !match) {
@@ -105,7 +105,6 @@ const textToHlNodes = async (textNode) => {
         className = match;
       }
       if (match) {
-        parentElement.classList.add(classNamePrefix);
         const span = document.createElement('span');
         span.textContent = match;
         span.id = `${classNamePrefix}_${currentNodeId}`;
@@ -139,6 +138,12 @@ const doHighlightText = (textNode) => {
   if (!parentElement) return;
   if (!textContent) return;
   if (!textContent.match(JapaneseRegex)) return;
+  if (
+    typeof parentElement.className === 'string' &&
+    parentElement.className.includes(classNamePrefix)
+  )
+    return;
+  parentElement.classList.add(classNamePrefix);
   textToHlNodes(textNode);
 };
 
@@ -149,6 +154,11 @@ const textNodesUnder = (node) => {
   const treeWalker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, goodNodeFilter, false);
   let currentNode = treeWalker.nextNode();
   while (currentNode) {
+    if (
+      currentNode.nodeType === Node.ELEMENT_NODE &&
+      currentNode.getAttribute('contenteditable') === 'true'
+    )
+      break;
     nodeList.push(currentNode);
     currentNode = treeWalker.nextNode();
   }

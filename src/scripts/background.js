@@ -340,9 +340,9 @@ const processDictWords = (allText) => {
 
   let rank = 0;
   allTextLines.forEach((allTextLine) => {
-    const [word, frequency] = allTextLine.split(',');
+    const [word] = allTextLine.split(',');
     rank += 1;
-    dictWords[word] = { rank, frequency };
+    dictWords[word] = { rank };
   });
   return dictWords;
 };
